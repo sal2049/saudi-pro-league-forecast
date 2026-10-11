@@ -1,0 +1,307 @@
+Date,Team 1,FT,Team 2
+Fri Aug 11 2023,Al-Ahli,3-1,Al-Hazem
+Sat Aug 12 2023,Al-Ta'ee,1-0,Damac
+Sat Aug 12 2023,Al-Fayha,3-1,Al-Khaleej
+Sun Aug 13 2023,Al-Riyadh SC,1-0,Al-Wehda
+Sun Aug 13 2023,Al-Fateh,1-1,Al-Taawoun
+Mon Aug 14 2023,Abha,1-3,Al-Hilal
+Mon Aug 14 2023,Al-Raed,0-3,Al-Ittihad
+Mon Aug 14 2023,Al-Ettifaq,2-1,Al-Nassr
+Mon Aug 14 2023,Al-Shabab,1-1,Al Okhdood SC
+Thu Aug 17 2023,Damac,2-2,Al-Riyadh SC
+Thu Aug 17 2023,Al-Khaleej,1-3,Al-Ahli
+Fri Aug 18 2023,Al Okhdood SC,1-3,Al-Fateh
+Fri Aug 18 2023,Al-Hazem,0-2,Al-Ettifaq
+Fri Aug 18 2023,Al-Nassr,0-2,Al-Taawoun
+Fri Aug 18 2023,Al-Wehda,3-1,Al-Shabab
+Sat Aug 19 2023,Abha,1-0,Al-Raed
+Sat Aug 19 2023,Al-Hilal,1-1,Al-Fayha
+Sat Aug 19 2023,Al-Ittihad,2-0,Al-Ta'ee
+Thu Aug 24 2023,Al-Ta'ee,0-3,Al-Wehda
+Thu Aug 24 2023,Al-Ettifaq,1-1,Al-Khaleej
+Thu Aug 24 2023,Al-Riyadh SC,0-4,Al-Ittihad
+Thu Aug 24 2023,Al-Raed,0-4,Al-Hilal
+Thu Aug 24 2023,Al-Ahli,1-0,Al Okhdood SC
+Fri Aug 25 2023,Al-Fayha,0-0,Al-Hazem
+Fri Aug 25 2023,Al-Shabab,1-1,Damac
+Fri Aug 25 2023,Al-Taawoun,1-0,Abha
+Fri Aug 25 2023,Al-Fateh,0-5,Al-Nassr
+Mon Aug 28 2023,Abha,2-1,Al-Fayha
+Mon Aug 28 2023,Al-Raed,3-0,Al-Riyadh SC
+Mon Aug 28 2023,Al-Hilal,2-0,Al-Ettifaq
+Mon Aug 28 2023,Al-Wehda,0-3,Al-Ittihad
+Tue Aug 29 2023,Damac,2-2,Al-Fateh
+Tue Aug 29 2023,Al Okhdood SC,0-1,Al-Taawoun
+Tue Aug 29 2023,Al-Khaleej,1-1,Al-Hazem
+Tue Aug 29 2023,Al-Nassr,4-0,Al-Shabab
+Tue Aug 29 2023,Al-Ahli,2-0,Al-Ta'ee
+Fri Sep 01 2023,Al-Ta'ee,1-0,Abha
+Fri Sep 01 2023,Al-Fayha,0-0,Al-Raed
+Fri Sep 01 2023,Al-Riyadh SC,0-1,Al Okhdood SC
+Fri Sep 01 2023,Al-Ittihad,3-4,Al-Hilal
+Sat Sep 02 2023,Al-Hazem,1-5,Al-Nassr
+Sat Sep 02 2023,Al-Shabab,1-3,Al-Khaleej
+Sat Sep 02 2023,Al-Fateh,5-1,Al-Ahli
+Sat Sep 02 2023,Al-Taawoun,4-1,Al-Wehda
+Sat Sep 02 2023,Al-Ettifaq,3-1,Damac
+Thu Sep 14 2023,Al Okhdood SC,0-1,Al-Ittihad
+Thu Sep 14 2023,Al-Wehda,4-2,Damac
+Fri Sep 15 2023,Al-Fayha,0-1,Al-Shabab
+Fri Sep 15 2023,Al-Hilal,6-1,Al-Riyadh SC
+Fri Sep 15 2023,Al-Khaleej,1-3,Al-Fateh
+Sat Sep 16 2023,Abha,1-3,Al-Ettifaq
+Sat Sep 16 2023,Al-Raed,1-3,Al-Nassr
+Sat Sep 16 2023,Al-Hazem,1-1,Al-Ta'ee
+Sat Sep 16 2023,Al-Ahli,3-2,Al-Taawoun
+Thu Sep 21 2023,Al-Ettifaq,4-3,Al-Ta'ee
+Thu Sep 21 2023,Damac,1-1,Al-Hilal
+Thu Sep 21 2023,Al-Taawoun,2-1,Al-Raed
+Thu Sep 21 2023,Al-Ittihad,2-1,Al-Fateh
+Thu Sep 21 2023,Al-Shabab,4-1,Al-Hazem
+Fri Sep 22 2023,Al Okhdood SC,0-1,Al-Khaleej
+Fri Sep 22 2023,Al-Riyadh SC,1-3,Al-Fayha
+Fri Sep 22 2023,Al-Wehda,4-0,Abha
+Fri Sep 22 2023,Al-Nassr,4-3,Al-Ahli
+Fri Sep 29 2023,Al-Hazem,1-3,Al-Taawoun
+Fri Sep 29 2023,Al-Ta'ee,1-2,Al-Nassr
+Fri Sep 29 2023,Al-Fayha,0-0,Al-Ittihad
+Fri Sep 29 2023,Al-Hilal,2-0,Al-Shabab
+Sat Sep 30 2023,Abha,0-1,Al-Riyadh SC
+Sat Sep 30 2023,Al-Raed,1-2,Al Okhdood SC
+Sat Sep 30 2023,Al-Fateh,5-1,Al-Wehda
+Sat Sep 30 2023,Al-Khaleej,0-2,Damac
+Sat Sep 30 2023,Al-Ahli,0-0,Al-Ettifaq
+Thu Oct 05 2023,Damac,4-1,Al-Hazem
+Thu Oct 05 2023,Al-Riyadh SC,2-2,Al-Shabab
+Thu Oct 05 2023,Al-Taawoun,3-0,Al-Ta'ee
+Thu Oct 05 2023,Al-Ettifaq,1-2,Al-Fateh
+Fri Oct 06 2023,Al-Nassr,2-2,Abha
+Fri Oct 06 2023,Al-Ittihad,0-1,Al-Ahli
+Sat Oct 07 2023,Al Okhdood SC,0-3,Al-Hilal
+Sat Oct 07 2023,Al-Wehda,1-1,Al-Fayha
+Sat Oct 07 2023,Al-Khaleej,0-0,Al-Raed
+Fri Oct 20 2023,Al Okhdood SC,1-2,Al-Fayha
+Fri Oct 20 2023,Al-Taawoun,1-1,Al-Ittihad
+Fri Oct 20 2023,Al-Fateh,4-1,Abha
+Fri Oct 20 2023,Al-Hilal,1-0,Al-Khaleej
+Sat Oct 21 2023,Al-Hazem,4-3,Al-Raed
+Sat Oct 21 2023,Al-Nassr,2-1,Damac
+Sat Oct 21 2023,Al-Ahli,3-1,Al-Wehda
+Sat Oct 21 2023,Al-Shabab,2-0,Al-Ta'ee
+Sun Oct 22 2023,Al-Riyadh SC,1-0,Al-Ettifaq
+Thu Oct 26 2023,Damac,2-0,Al Okhdood SC
+Thu Oct 26 2023,Al-Khaleej,1-1,Al-Taawoun
+Thu Oct 26 2023,Al-Ittihad,2-2,Al-Hazem
+Fri Oct 27 2023,Al-Ta'ee,3-2,Al-Riyadh SC
+Fri Oct 27 2023,Al-Raed,1-2,Al-Fateh
+Fri Oct 27 2023,Al-Hilal,3-1,Al-Ahli
+Sat Oct 28 2023,Abha,2-1,Al-Shabab
+Sat Oct 28 2023,Al-Fayha,1-3,Al-Nassr
+Sat Oct 28 2023,Al-Wehda,2-3,Al-Ettifaq
+Fri Nov 03 2023,Al-Fateh,0-2,Al-Hilal
+Fri Nov 03 2023,Al-Ta'ee,3-3,Al-Fayha
+Fri Nov 03 2023,Al-Shabab,1-0,Al-Ittihad
+Sat Nov 04 2023,Abha,3-2,Al Okhdood SC
+Sat Nov 04 2023,Al-Ettifaq,0-0,Al-Raed
+Sat Nov 04 2023,Al-Nassr,2-0,Al-Khaleej
+Sun Nov 05 2023,Al-Hazem,1-2,Al-Wehda
+Sun Nov 05 2023,Al-Taawoun,0-0,Damac
+Sun Nov 05 2023,Al-Ahli,3-0,Al-Riyadh SC
+Thu Nov 09 2023,Al-Khaleej,3-1,Al-Ta'ee
+Thu Nov 09 2023,Al-Raed,2-1,Al-Shabab
+Thu Nov 09 2023,Al-Riyadh SC,1-1,Al-Fateh
+Thu Nov 09 2023,Damac,2-2,Al-Ahli
+Fri Nov 10 2023,Al-Hilal,2-0,Al-Taawoun
+Fri Nov 10 2023,Al-Ittihad,4-2,Abha
+Sat Nov 11 2023,Al Okhdood SC,2-1,Al-Hazem
+Sat Nov 11 2023,Al-Fayha,0-0,Al-Ettifaq
+Sat Nov 11 2023,Al-Wehda,1-3,Al-Nassr
+Fri Nov 24 2023,Al-Taawoun,1-2,Al-Riyadh SC
+Fri Nov 24 2023,Al-Ettifaq,1-1,Al-Ittihad
+Fri Nov 24 2023,Al-Ta'ee,4-3,Al-Raed
+Fri Nov 24 2023,Al-Nassr,3-0,Al Okhdood SC
+Sat Nov 25 2023,Al-Hazem,0-9,Al-Hilal
+Sat Nov 25 2023,Al-Fateh,0-1,Al-Fayha
+Sat Nov 25 2023,Al-Wehda,3-1,Al-Khaleej
+Sat Nov 25 2023,Damac,4-2,Abha
+Sat Nov 25 2023,Al-Ahli,0-0,Al-Shabab
+Thu Nov 30 2023,Al-Riyadh SC,0-0,Al-Hazem
+Thu Nov 30 2023,Abha,0-6,Al-Ahli
+Thu Nov 30 2023,Al-Ittihad,4-2,Al-Khaleej
+Fri Dec 01 2023,Al-Fayha,2-4,Damac
+Fri Dec 01 2023,Al-Hilal,3-0,Al-Nassr
+Sat Dec 02 2023,Al-Fateh,0-1,Al-Ta'ee
+Sat Dec 02 2023,Al Okhdood SC,1-0,Al-Ettifaq
+Sat Dec 02 2023,Al-Raed,2-0,Al-Wehda
+Sat Dec 02 2023,Al-Shabab,1-2,Al-Taawoun
+Thu Dec 07 2023,Damac,3-1,Al-Ittihad
+Thu Dec 07 2023,Al-Hazem,2-0,Al-Fateh
+Thu Dec 07 2023,Al-Shabab,0-0,Al-Ettifaq
+Fri Dec 08 2023,Al-Khaleej,3-1,Abha
+Fri Dec 08 2023,Al-Ta'ee,1-2,Al-Hilal
+Fri Dec 08 2023,Al-Taawoun,4-1,Al-Fayha
+Fri Dec 08 2023,Al-Nassr,4-1,Al-Riyadh SC
+Sat Dec 09 2023,Al-Ahli,0-0,Al-Raed
+Sat Dec 09 2023,Al-Wehda,2-0,Al Okhdood SC
+Thu Dec 14 2023,Abha,1-1,Al-Hazem
+Thu Dec 14 2023,Al Okhdood SC,1-0,Al-Ta'ee
+Thu Dec 14 2023,Al-Fayha,0-4,Al-Ahli
+Fri Dec 15 2023,Al-Fateh,1-1,Al-Shabab
+Fri Dec 15 2023,Al-Raed,0-1,Damac
+Fri Dec 15 2023,Al-Hilal,2-0,Al-Wehda
+Sat Dec 16 2023,Al-Riyadh SC,0-1,Al-Khaleej
+Sat Dec 16 2023,Al-Ettifaq,0-2,Al-Taawoun
+Thu Dec 21 2023,Al-Khaleej,3-0,Al-Fayha
+Thu Dec 21 2023,Damac,3-0,Al-Ta'ee
+Thu Dec 21 2023,Al-Hilal,7-0,Abha
+Fri Dec 22 2023,Al-Nassr,3-1,Al-Ettifaq
+Fri Dec 22 2023,Al Okhdood SC,1-0,Al-Shabab
+Fri Dec 22 2023,Al-Hazem,0-4,Al-Ahli
+Sat Dec 23 2023,Al-Taawoun,1-3,Al-Fateh
+Sat Dec 23 2023,Al-Ittihad,1-3,Al-Raed
+Sun Dec 24 2023,Al-Wehda,3-1,Al-Riyadh SC
+Tue Dec 26 2023,Al-Ittihad,2-5,Al-Nassr
+Thu Dec 28 2023,Al-Ettifaq,1-1,Al-Hazem
+Thu Dec 28 2023,Al-Riyadh SC,1-0,Damac
+Fri Dec 29 2023,Al-Raed,4-3,Abha
+Fri Dec 29 2023,Al-Fayha,0-2,Al-Hilal
+Fri Dec 29 2023,Al-Ahli,1-0,Al-Khaleej
+Sat Dec 30 2023,Al-Fateh,0-0,Al Okhdood SC
+Sat Dec 30 2023,Al-Taawoun,1-4,Al-Nassr
+Sat Dec 30 2023,Al-Shabab,1-0,Al-Wehda
+Wed Feb 07 2024,Al-Ta'ee,0-3,Al-Ittihad
+Thu Feb 15 2024,Abha,1-1,Al-Taawoun
+Thu Feb 15 2024,Al-Khaleej,0-2,Al-Ettifaq
+Fri Feb 16 2024,Damac,0-1,Al-Shabab
+Fri Feb 16 2024,Al-Wehda,1-1,Al-Ta'ee
+Fri Feb 16 2024,Al Okhdood SC,3-2,Al-Ahli
+Sat Feb 17 2024,Al-Hazem,1-3,Al-Fayha
+Sat Feb 17 2024,Al-Nassr,2-1,Al-Fateh
+Sun Feb 18 2024,Al-Hilal,3-1,Al-Raed
+Sun Feb 18 2024,Al-Ittihad,2-0,Al-Riyadh SC
+Fri Feb 23 2024,Al-Taawoun,3-1,Al Okhdood SC
+Fri Feb 23 2024,Al-Riyadh SC,1-1,Al-Raed
+Fri Feb 23 2024,Al-Fateh,1-1,Damac
+Sat Feb 24 2024,Al-Ta'ee,1-4,Al-Ahli
+Sat Feb 24 2024,Al-Hazem,1-1,Al-Khaleej
+Sun Feb 25 2024,Al-Fayha,3-2,Abha
+Sun Feb 25 2024,Al-Shabab,2-3,Al-Nassr
+Mon Feb 26 2024,Al-Ettifaq,0-2,Al-Hilal
+Mon Feb 26 2024,Al-Ittihad,2-1,Al-Wehda
+Thu Feb 29 2024,Al-Raed,1-2,Al-Fayha
+Thu Feb 29 2024,Al-Wehda,3-3,Al-Taawoun
+Thu Feb 29 2024,Al-Nassr,4-4,Al-Hazem
+Fri Mar 01 2024,Al Okhdood SC,1-2,Al-Riyadh SC
+Fri Mar 01 2024,Abha,2-0,Al-Ta'ee
+Fri Mar 01 2024,Al-Hilal,3-1,Al-Ittihad
+Sat Mar 02 2024,Al-Khaleej,0-0,Al-Shabab
+Sat Mar 02 2024,Damac,0-2,Al-Ettifaq
+Sat Mar 02 2024,Al-Ahli,1-1,Al-Fateh
+Thu Mar 07 2024,Damac,1-0,Al-Wehda
+Thu Mar 07 2024,Al-Shabab,2-3,Al-Fayha
+Thu Mar 07 2024,Al-Nassr,1-3,Al-Raed
+Fri Mar 08 2024,Al-Riyadh SC,1-3,Al-Hilal
+Fri Mar 08 2024,Al-Ta'ee,1-0,Al-Hazem
+Fri Mar 08 2024,Al-Ittihad,2-1,Al Okhdood SC
+Sat Mar 09 2024,Al-Fateh,1-2,Al-Khaleej
+Sat Mar 09 2024,Al-Ettifaq,3-0,Abha
+Sat Mar 09 2024,Al-Taawoun,0-1,Al-Ahli
+Thu Mar 14 2024,Al-Hazem,0-3,Al-Shabab
+Thu Mar 14 2024,Al-Khaleej,2-2,Al Okhdood SC
+Thu Mar 14 2024,Abha,1-0,Al-Wehda
+Fri Mar 15 2024,Al-Fayha,1-1,Al-Riyadh SC
+Fri Mar 15 2024,Al-Ahli,0-1,Al-Nassr
+Fri Mar 15 2024,Al-Ta'ee,1-1,Al-Ettifaq
+Sat Mar 16 2024,Al-Fateh,2-4,Al-Ittihad
+Sat Mar 16 2024,Al-Raed,0-0,Al-Taawoun
+Sat Mar 16 2024,Al-Hilal,2-1,Damac
+Fri Mar 29 2024,Al Okhdood SC,1-3,Al-Raed
+Fri Mar 29 2024,Al-Taawoun,4-0,Al-Hazem
+Fri Mar 29 2024,Al-Ittihad,3-1,Al-Fayha
+Fri Mar 29 2024,Damac,0-1,Al-Khaleej
+Fri Mar 29 2024,Al-Ettifaq,2-2,Al-Ahli
+Sat Mar 30 2024,Al-Nassr,5-1,Al-Ta'ee
+Sat Mar 30 2024,Al-Riyadh SC,1-1,Abha
+Sat Mar 30 2024,Al-Shabab,3-4,Al-Hilal
+Sat Mar 30 2024,Al-Wehda,2-3,Al-Fateh
+Mon Apr 01 2024,Al-Ahli,1-0,Al-Ittihad
+Mon Apr 01 2024,Al-Raed,0-1,Al-Khaleej
+Mon Apr 01 2024,Al-Hazem,0-0,Damac
+Tue Apr 02 2024,Al-Ta'ee,2-3,Al-Taawoun
+Tue Apr 02 2024,Abha,0-8,Al-Nassr
+Tue Apr 02 2024,Al-Fayha,1-2,Al-Wehda
+Tue Apr 02 2024,Al-Hilal,3-0,Al Okhdood SC
+Wed Apr 03 2024,Al-Fateh,1-0,Al-Ettifaq
+Wed Apr 03 2024,Al-Shabab,1-0,Al-Riyadh SC
+Fri Apr 05 2024,Damac,0-1,Al-Nassr
+Fri Apr 05 2024,Al-Ittihad,0-0,Al-Taawoun
+Fri Apr 05 2024,Al-Wehda,1-1,Al-Ahli
+Fri Apr 05 2024,Al-Khaleej,1-4,Al-Hilal
+Sat Apr 06 2024,Al-Ettifaq,1-0,Al-Riyadh SC
+Sat Apr 06 2024,Al-Ta'ee,0-0,Al-Shabab
+Sun Apr 07 2024,Al-Fayha,3-0,Al Okhdood SC
+Sun Apr 07 2024,Al-Raed,2-0,Al-Hazem
+Sun Apr 07 2024,Abha,2-1,Al-Fateh
+Thu Apr 18 2024,Al-Taawoun,1-1,Al-Khaleej
+Thu Apr 18 2024,Al-Fateh,3-1,Al-Raed
+Thu Apr 18 2024,Al-Shabab,5-0,Abha
+Fri Apr 19 2024,Al-Riyadh SC,1-2,Al-Ta'ee
+Fri Apr 19 2024,Al-Nassr,3-1,Al-Fayha
+Sat Apr 20 2024,Al Okhdood SC,1-2,Damac
+Sat Apr 20 2024,Al-Ettifaq,0-0,Al-Wehda
+Sat Apr 20 2024,Al-Hazem,2-3,Al-Ittihad
+Thu Apr 25 2024,Al-Fayha,1-0,Al-Ta'ee
+Thu Apr 25 2024,Al-Riyadh SC,2-1,Al-Ahli
+Thu Apr 25 2024,Al-Wehda,0-2,Al-Hazem
+Fri Apr 26 2024,Al-Hilal,3-1,Al-Fateh
+Fri Apr 26 2024,Damac,0-1,Al-Taawoun
+Fri Apr 26 2024,Al-Ittihad,1-3,Al-Shabab
+Sat Apr 27 2024,Al-Raed,2-2,Al-Ettifaq
+Sat Apr 27 2024,Al Okhdood SC,4-0,Abha
+Sat Apr 27 2024,Al-Khaleej,0-1,Al-Nassr
+Thu May 02 2024,Al-Hazem,0-0,Al Okhdood SC
+Thu May 02 2024,Al-Ahli,4-1,Damac
+Thu May 02 2024,Al-Fateh,2-2,Al-Riyadh SC
+Fri May 03 2024,Al-Taawoun,0-3,Al-Hilal
+Fri May 03 2024,Abha,3-1,Al-Ittihad
+Fri May 03 2024,Al-Ettifaq,1-2,Al-Fayha
+Sat May 04 2024,Al-Shabab,2-0,Al-Raed
+Sat May 04 2024,Al-Ta'ee,0-0,Al-Khaleej
+Sat May 04 2024,Al-Nassr,6-0,Al-Wehda
+Mon May 06 2024,Al-Ahli,1-2,Al-Hilal
+Thu May 09 2024,Al-Riyadh SC,0-0,Al-Taawoun
+Thu May 09 2024,Al-Fayha,2-2,Al-Fateh
+Thu May 09 2024,Al Okhdood SC,2-3,Al-Nassr
+Fri May 10 2024,Abha,0-0,Damac
+Fri May 10 2024,Al-Khaleej,1-2,Al-Wehda
+Fri May 10 2024,Al-Ittihad,0-5,Al-Ettifaq
+Sat May 11 2024,Al-Raed,1-1,Al-Ta'ee
+Sat May 11 2024,Al-Hilal,4-1,Al-Hazem
+Sat May 11 2024,Al-Shabab,1-2,Al-Ahli
+Thu May 16 2024,Al-Ta'ee,3-1,Al-Fateh
+Thu May 16 2024,Al-Wehda,0-1,Al-Raed
+Thu May 16 2024,Al-Khaleej,1-1,Al-Ittihad
+Fri May 17 2024,Damac,1-1,Al-Fayha
+Fri May 17 2024,Al-Nassr,1-1,Al-Hilal
+Fri May 17 2024,Al-Ettifaq,1-1,Al Okhdood SC
+Sat May 18 2024,Al-Taawoun,1-0,Al-Shabab
+Sat May 18 2024,Al-Hazem,1-1,Al-Riyadh SC
+Sat May 18 2024,Al-Ahli,5-1,Abha
+Thu May 23 2024,Al-Ittihad,4-1,Damac
+Thu May 23 2024,Al-Riyadh SC,2-2,Al-Nassr
+Thu May 23 2024,Al-Ettifaq,1-0,Al-Shabab
+Thu May 23 2024,Al Okhdood SC,1-1,Al-Wehda
+Thu May 23 2024,Al-Fateh,2-1,Al-Hazem
+Thu May 23 2024,Al-Raed,0-0,Al-Ahli
+Thu May 23 2024,Al-Fayha,1-1,Al-Taawoun
+Thu May 23 2024,Al-Hilal,3-1,Al-Ta'ee
+Thu May 23 2024,Abha,2-1,Al-Khaleej
+Mon May 27 2024,Al-Khaleej,1-2,Al-Riyadh SC
+Mon May 27 2024,Al-Hazem,2-1,Abha
+Mon May 27 2024,Al-Shabab,3-2,Al-Fateh
+Mon May 27 2024,Al-Ahli,1-0,Al-Fayha
+Mon May 27 2024,Al-Ta'ee,0-2,Al Okhdood SC
+Mon May 27 2024,Damac,1-1,Al-Raed
+Mon May 27 2024,Al-Wehda,1-2,Al-Hilal
+Mon May 27 2024,Al-Nassr,4-2,Al-Ittihad
+Mon May 27 2024,Al-Taawoun,1-0,Al-Ettifaq
