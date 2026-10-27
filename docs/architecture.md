@@ -5,112 +5,111 @@
 ```mermaid
 flowchart TB
     subgraph inputs [Inputs]
-        M[("data/matches<br/>one row per match")]
-        C["data/holdout/teams<br/>clubs in the target season"]
-        R[("data/holdout/final_table<br/>how the target season ended")]
+        M[("data/matches<br/>one CSV per season, FBref")]
     end
 
     subgraph prep [Preparation]
-        T["data.league_tables<br/>points, goals, position per club"]
-        F["features.build_dataset<br/>features and targets per club-season"]
+        L["data.load_matches<br/>one row per fixture, result H/D/A"]
+        T["data.league_tables<br/>season tables, for last-season strength"]
+        F["features.add_features<br/>last_diff, form_diff per match"]
     end
 
     subgraph eval [Evaluation]
-        W["evaluate.walk_forward<br/>train on the past, test on the next season"]
-        S["evaluate.summarise<br/>error, train-test gap"]
+        W["evaluate.walk_forward<br/>train on earlier seasons, test the next"]
+        S["evaluate.summarise<br/>accuracy, log loss, train-test gap"]
     end
 
-    subgraph out [Forecast]
-        P["forecast.forecast_season<br/>table, ranges, probabilities"]
-        H["forecast.score_holdout<br/>error on the target season"]
+    subgraph use [Use]
+        K["forecast.predict_week<br/>one matchweek, three probabilities each"]
+        R["forecast.most_likely_winners<br/>clubs ranked by win chance"]
+        Q["forecast.season_table<br/>expected points over a season"]
     end
 
-    M --> T --> F
-    C --> F
-    F --> W --> S --> P
-    F --> P --> H
-    R --> H
+    M --> L --> T --> F
+    L --> F
+    F --> W --> S
+    S -->|lowest log loss| K --> R
+    S --> Q
     S --> O["reports/"]
-    P --> O
-    H --> O
+    K --> O
 ```
 
 `pipeline.run()` calls these in order. Each box is one function that takes
-data frames and returns a data frame, so every step can be run and inspected
-on its own, which is what the notebook does.
+data frames and returns a data frame, so every step can be run on its own,
+which is what the notebook does.
 
 ## The modelling table
 
-`build_dataset` returns one row per club per season.
+`add_features` returns one row per match.
 
-| Column | Known before the season? | Meaning |
+| Column | Known before kick-off? | Meaning |
 |---|:---:|---|
-| `prev_ppg`, `prev_gd_pg` | yes | Points and goal difference per game last season |
-| `promoted` | yes | 1 if the club was not in last season's table |
-| `prev_points`, `prev_wins`, ... | yes | Raw totals, used only by the `v1` model |
-| `ppg` | no (target) | Points per game this season |
-| `position` | no (target) | Final position this season |
+| `home_last`, `away_last` | yes | Goal difference per game last season |
+| `home_form`, `away_form` | yes | Goal difference per game over the last 10 league matches |
+| `last_diff`, `form_diff` | yes | Home minus away, for each of the two. These are the model's inputs |
+| `result` | no (target) | H, D or A |
 
-Seven seasons of matches give six seasons with a "previous season", so there
-are 100 labelled rows. The 2025-26 rows have features and empty targets.
+The first season (2014-15) has no "last season", so its matches only feed
+form. A club with fewer than 3 recent top-flight matches, usually a promoted
+side, uses its last-season number for form too.
 
 ## Walk-forward backtest
 
-A model is only ever tested on a season that comes after everything it was
-trained on, the same way it would be used for real.
+A model is only tested on a season that comes after everything it was trained
+on, the same way it would be used for real.
 
-| Test season | Training seasons | Training rows | Test rows |
-|---|---|:---:|:---:|
-| 2021-22 | 2019-20, 2020-21 | 32 | 16 |
-| 2022-23 | 2019-20 to 2021-22 | 48 | 16 |
-| 2023-24 | 2019-20 to 2022-23 | 64 | 18 |
-| 2024-25 | 2019-20 to 2023-24 | 82 | 18 |
-| 2025-26 (holdout) | 2019-20 to 2024-25 | 100 | 18 |
+| Test season | Trained on | Test matches |
+|---|---|:---:|
+| 2016-17 | 2015-16 | 182 |
+| 2017-18 | 2015-16 to 2016-17 | 182 |
+| ... | ... | ... |
+| 2024-25 | 2015-16 to 2023-24 | 306 |
+| 2025-26 (holdout) | 2015-16 to 2024-25 | 306 |
 
-The first four rows are the backtest and are used to choose a model. The last
-row is the holdout: it plays no part in any choice and is scored once.
+Nine backtest seasons, 2,176 matches, choose the model. 2025-26 is scored
+once, after the choice. The 2026-27 season is in progress: the next unplayed
+matchweek is predicted from everything played before it.
 
-A random split of rows would be wrong here. It would let a model train on
-2024-25 and be tested on 2021-22, and it would put clubs from the same season
-on both sides of the split.
+A random split of matches would be wrong here: it would train on 2024-25 to
+predict 2019-20, and form features would be computed from matches that come
+after the ones being predicted.
 
 ## Design decisions
 
-**Predict points per game, then rank.** League position is the thing we care
-about, but it is an awkward target: it is ordinal, it depends on what every
-other club does, and its scale changes when the league grows from 16 to 18
-clubs. Points per game is continuous and means the same thing in every
-season. Ranking the predictions gives the table.
+**Predict matches, not tables.** Ten seasons of tables give about 100
+club-seasons to learn from; ten seasons of matches give about 2,800. A match
+also has a natural baseline (the home side wins 44% of the time) and can be
+checked every week.
 
-**Three features, all from last season's table.** Points per game, goal
-difference per game and a promoted flag. They are easy to explain and known
-before a ball is kicked. Points and goal difference are highly correlated
-(0.97), but goal difference is less affected by luck in close matches, and it
-is where the model's gain over the baseline comes from: on points alone the
-linear model ranks clubs exactly as the baseline does.
+**Two features, in goals per game.** Goal difference is a steadier measure of
+strength than points, which depend on a few lucky or unlucky results. Per
+game, because seasons have had 26, 30 and 34 matches per club. Last season
+gives a stable view; the last 10 matches react to changes, including during
+the current season. Both are differences (home minus away), so the model sees
+how far apart the two teams are.
 
-**Promoted clubs.** A promoted club has no previous top-flight season. Its
-`prev_*` features are filled with the average of the previous season's bottom
-three, and the `promoted` flag lets a model correct for that.
+**Logistic regression.** It turns a weighted sum of the inputs into
+probabilities for the three results. With two inputs it has 9 numbers to
+learn (a weight per input and a constant, for each of the three results) and
+cannot memorise 2,000 matches. The tree ensembles are there to show what
+happens when a model has more freedom than the signal supports.
 
-**Small models first.** With 100 rows, the comparison runs from no parameters
-(baseline) to four (linear regression) before anything flexible.
-The tree ensembles are there to show what happens when a model has more
-capacity than the data can support.
+**Choose by log loss, report accuracy too.** Log loss judges the
+probabilities, which is what the weekly rankings and the season table use.
+Accuracy is easier to explain. Both are reported.
 
-**Uncertainty.** The forecast simulates 10,000 seasons. In each one, every
-club's predicted points per game is nudged by random noise with the same
-spread as the model's backtest errors, and the league is re-ranked. Position
-ranges and probabilities are read off those simulations.
+**Season table as a by-product.** Expected points per match, 3 &times; P(win)
++ P(draw), summed over a season's fixtures with the season's own results
+hidden. It is reported, with its weaker seasons, but it is not what the model
+was chosen for.
 
 ## Guards against leakage
 
-- Features for season *N* are built only from seasons before *N*.
-  `tests/test_features.py` rewrites every result from a season onwards and
-  checks that the season's features do not change.
-- `walk_forward` trains only on seasons before the test season.
-  `tests/test_evaluate.py` asserts it.
-- Feature scaling sits inside each model pipeline, so it is fitted on the
-  training seasons only.
-- The model is chosen in `pipeline.run()` before `load_final_table` is called.
-  The forecast code path never reads the final table.
+- Features for a match use only results from earlier dates.
+  `tests/test_features.py` swaps every result from 1 January 2024 onwards and
+  checks that no earlier match's features change.
+- `walk_forward` trains only on earlier seasons; `predict_week` trains only on
+  matches before the week's first kick-off.
+- `season_table` hides the season's results before building its features, so
+  form cannot update during a season it is forecasting.
+- The model is chosen before 2025-26 is scored.

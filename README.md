@@ -1,141 +1,160 @@
-# Saudi Pro League table forecast
+# Saudi Pro League match predictor
 
 [![CI](https://github.com/sal2049/saudi-pro-league-forecast/actions/workflows/ci.yml/badge.svg)](https://github.com/sal2049/saudi-pro-league-forecast/actions/workflows/ci.yml)
 
-Can you predict next season's league table from past results alone? This
-project tries, using seven seasons of Saudi Pro League matches (2018-19 to
-2024-25), and then checks its 2025-26 forecast against the table that season
-actually produced.
+Before a Saudi Pro League match kicks off, can you say whether it will end in
+a home win, a draw or an away win? This project tries, using every league
+match since 2014-15, and predicts each matchweek one at a time.
 
-The short answer: a little. The best model is a plain linear regression, about
-**2.7 places off per club**, against 3.1 for simply copying last season's table
-and 5 to 6 for a random guess. With only 100 club-seasons to learn from, the
-more flexible models memorised the training data and did worse than the
-baseline.
+The short answer: a little better than guessing. Always picking the home team
+is right **44%** of the time. A logistic regression on two simple numbers is
+right **52%** of the time across nine test seasons, and **57%** on the
+2025-26 season, which played no part in building it. It never predicts a
+draw, and draws are almost a quarter of all matches.
 
-![Forecast for 2025-26 against the real final table](reports/figures/forecast_vs_actual.png)
+## The question, as an ML problem
 
-The forecast above was built from matches up to May 2025. It put the eventual
-champions Al-Nassr third (a 14% title chance, behind Al-Ittihad at 37%), got
-three of the top four right, and 17 of 18 clubs finished inside their 80%
-range. Its worst miss was Neom, a newly promoted club it had no history for:
-forecast last, finished 8th.
-
-## How it works
+- **Type:** supervised classification with three classes: home win (H), draw
+  (D), away win (A).
+- **One row:** one match. 2,940 played matches, 2014-15 to 2026-27 so far.
+- **Inputs:** two numbers, both known before kick-off.
+  - `last_diff`: home team's goal difference per game last season, minus the
+    away team's.
+  - `form_diff`: the same, over each team's last 10 league matches.
+- **Output:** three probabilities that add up to 1. The pick is the most likely
+  of the three.
 
 ```mermaid
 flowchart LR
-    M[("Match results<br/>7 seasons, 1,812 matches")] --> T["League tables<br/>one per season"]
-    T --> F["Feature table<br/>one row per club per season"]
-    C["Clubs in 2025-26"] --> F
-    F --> B["Walk-forward backtest<br/>5 models, 4 test seasons"]
-    B --> S{"Lowest<br/>error"}
-    S --> P["Refit on every season<br/>and forecast 2025-26"]
-    P --> H["Score the forecast"]
-    R[("2025-26 final table")] --> H
+    S[("FBref fixtures<br/>13 seasons")] --> M["Matches<br/>2,940 played"]
+    M --> F["Two features per match<br/>last season, last 10 games"]
+    F --> B["Walk-forward backtest<br/>4 models, 9 seasons"]
+    B --> C{"Lowest<br/>log loss"}
+    C --> H["Score 2025-26<br/>untouched until the end"]
+    C --> W["Next matchweek<br/>probabilities and picks"]
 ```
 
-1. **Tables.** Matches are rolled up into a final table per season
-   ([data.py](src/spl_predictor/data.py)).
-2. **Features.** Each club-season gets three numbers that were known before its
-   first match: points per game and goal difference per game last season, and
-   a flag for promoted clubs ([features.py](src/spl_predictor/features.py)).
-3. **Models.** Five candidates predict next season's points per game; clubs
-   are ranked by that prediction ([models.py](src/spl_predictor/models.py)).
-4. **Backtest.** Each model is trained on the seasons before a test season and
-   scored on that season, for four test seasons in turn
-   ([evaluate.py](src/spl_predictor/evaluate.py)).
-5. **Forecast.** The backtest winner is refitted on everything and forecasts
-   2025-26, with a range for each club from 10,000 simulated seasons
-   ([forecast.py](src/spl_predictor/forecast.py)).
-6. **Holdout.** Only then is the real 2025-26 table opened and the forecast scored.
+## Results
+
+Accuracy is the share of matches whose result was picked correctly. Log loss
+scores the probabilities themselves: lower is better, and it punishes being
+confidently wrong.
+
+| Model | Accuracy, backtest<br/>(2,176 matches) | Log loss,<br/>backtest | Log loss on<br/>training matches | Accuracy,<br/>2025-26 (306) | Log loss,<br/>2025-26 |
+|---|:---:|:---:|:---:|:---:|:---:|
+| Always home win (baseline) | 43.9% | 1.068 | 1.075 | 44.1% | 1.064 |
+| **Logistic regression** | **52.0%** | **0.995** | 0.986 | **57.2%** | **0.902** |
+| Gradient boosting | 47.4% | 1.091 | 0.725 | 56.9% | 0.935 |
+| Random forest | 43.5% | 1.543 | 0.288 | 50.3% | 2.012 |
+
+Logistic regression was chosen before 2025-26 was scored, by the lowest
+backtest log loss. Across all ten test seasons it picks **8.7 percentage
+points** more results correctly than always picking the home team (95%
+interval 6.6 to 10.8, from a paired bootstrap over matches).
+
+![Accuracy by model](reports/figures/model_comparison.png)
+
+What I take from this:
+
+- **A small, real edge.** Two numbers about each team's strength move
+  accuracy from 44% to about 52%. That is the whole gain.
+- **The flexible models overfit.** The random forest has a log loss of 0.29 on
+  matches it trained on and 1.54 on new ones, and picks fewer results
+  correctly than always choosing the home team. Gradient boosting shows the
+  same pattern, less strongly.
+- **It never predicts a draw.** A draw is never the single most likely result
+  for any match: the model's highest draw probability in 2025-26 was 26%.
+  So every draw is a miss. This is common for this kind of model.
+- **More seasons did not help.** I scraped four extra seasons (2014-15 to
+  2017-18). Trained with or without them, the model scores almost the same
+  (log loss 0.977 against 0.982, accuracy 52.4% against 52.6%). More rows of
+  the same two numbers add little; new kinds of information would.
+
+![Train and test log loss](reports/figures/overfitting_gap.png)
+
+### Week by week
+
+In 2025-26 the model got **5.1 of 9 results right per matchweek on average**,
+with a best week of 8 and a worst of 3.
+
+The prediction for the next matchweek of the current season, made on 27
+October 2026 before any of its matches were played:
+
+| Date | Home | Away | Home win | Draw | Away win | Pick |
+|---|---|---|:---:|:---:|:---:|---|
+| 29 Oct | Al-Khaleej | Al-Hazem | 45% | 26% | 29% | home win |
+| 29 Oct | Al-Nassr | Al-Kholood | 80% | 15% | 4% | home win |
+| 29 Oct | Al-Riyadh | Al-Qadsiah | 10% | 17% | 73% | away win |
+| 30 Oct | Abha | Al-Ittihad | 15% | 20% | 65% | away win |
+| 30 Oct | Al-Shabab | Al-Ahli | 16% | 21% | 63% | away win |
+| 30 Oct | Diriyah Club | Neom | 28% | 25% | 48% | away win |
+| 31 Oct | Al-Fayha | Al-Faisaly | 55% | 25% | 20% | home win |
+| 31 Oct | Al-Hilal | Al-Fateh | 82% | 14% | 4% | home win |
+| 31 Oct | Al-Taawoun | Al-Ettifaq | 37% | 25% | 38% | away win |
+
+Most likely to win that week: Al-Hilal, Al-Nassr, Al-Qadsiah. Re-running
+`python -m spl_predictor` after new results are added predicts the next week.
+
+### From matches to a season table
+
+Adding up each club's expected points (3 &times; P(win) + P(draw)) over a
+whole season, using only what was known before it started, gives a predicted
+table. Over the nine backtest seasons it is **2.68 places off per club**,
+against 3.10 for simply keeping last season's order. But it was worse than
+that baseline in four of the ten test seasons, including 2025-26 (3.33
+against 3.00), so I treat the table as a by-product, not the result.
+
+![2025-26 table from match predictions](reports/figures/season_table_2025-26.png)
+
+## How it works
+
+1. **Data** ([data.py](src/spl_predictor/data.py)). One CSV per season of
+   FBref fixtures, loaded into one row per match.
+2. **Features** ([features.py](src/spl_predictor/features.py)). Walk through
+   the matches in date order and record each team's numbers *before* each
+   match. A promoted club has no top-flight season to look back on, so it gets
+   the average of the previous season's bottom three.
+3. **Models** ([models.py](src/spl_predictor/models.py)). A no-skill baseline,
+   logistic regression, random forest and gradient boosting.
+4. **Backtest** ([evaluate.py](src/spl_predictor/evaluate.py)). For each test
+   season, train on all earlier seasons and predict every match of it.
+5. **Use** ([forecast.py](src/spl_predictor/forecast.py)). Predict one
+   matchweek, rank clubs by their chance of winning that week, or add up a
+   whole season.
 
 [docs/architecture.md](docs/architecture.md) has the design decisions and the
 guards against data leakage. [notebooks/walkthrough.ipynb](notebooks/walkthrough.ipynb)
 runs the same steps with the intermediate tables on show.
 
-## Results
+## How this project got here
 
-Error is the average number of places between a club's predicted and actual
-position. Lower is better.
+It started as a data mining course project that treated the final league
+position as one of 18 classes and reported a KNN classifier as 2.47 places
+off. That number came from choosing the best of eight models on a single
+season. Tested over several seasons it was no better than copying last
+season's table.
 
-| Model | Backtest<br/>(4 seasons) | On its own<br/>training seasons | 2025-26<br/>holdout | Gain over baseline,<br/>all 5 seasons (95% CI) |
-|---|:---:|:---:|:---:|:---:|
-| Last season's table (baseline) | 3.10 | 3.24 | 2.89 | |
-| **Linear regression** | **2.68** | 2.77 | 2.89 | **0.34** (0.10 to 0.59) |
-| v1: KNN classifier on positions | 2.96 | 2.69 | 3.22 | 0.05 (-0.33 to 0.42) |
-| Random forest | 3.25 | 1.62 | 3.11 | -0.16 (-0.74 to 0.41) |
-| Gradient boosting | 3.44 | 1.45 | 2.89 | -0.27 (-0.88 to 0.34) |
-
-What I take from this:
-
-- **Only the straight line beats the baseline, and only by about a third of a
-  place.** It is the one model whose confidence interval stays clear of zero.
-  It won three of the five test seasons, lost one narrowly (3.44 against
-  3.39 in 2024-25) and tied on 2025-26.
-- **What it learned.** Fitted on all 100 rows: points per game next season =
-  0.45 + 0.67 &times; last season's points per game + 0.07 &times; last
-  season's goal difference per game + 0.11 if promoted. Points and goal
-  difference are 97% correlated, so how the weight is split between them
-  changes from one training window to the next; read the two together. The
-  overall slope is below 1, so clubs drift back toward the average.
-- **The gain comes from goal difference.** On points and the promoted flag
-  alone, the model ranks clubs exactly like the baseline (3.10). Goal
-  difference is a steadier measure of strength than points, so it reorders
-  clubs that finished close together.
-- **Promoted clubs are the main source of error.** The average miss is 2.2
-  places for established clubs and 4.8 for promoted ones. The model knows
-  nothing about a promoted side except that it is new.
-
-![Backtest and holdout error for each model](reports/figures/model_comparison.png)
-
-### Overfitting
-
-The clearest sign of overfitting is a model doing much better on seasons it
-trained on than on a season it has never seen.
-
-![Error on training seasons against unseen seasons](reports/figures/overfitting_gap.png)
-
-Gradient boosting is off by 1.5 places on its training seasons and 3.4 on new
-ones, which is worse than not modelling at all. The random forest shows the
-same pattern. Linear regression has no gap, which is what you want from a
-model fitted on 100 rows.
-
-## What changed from the first version
-
-This started as a data mining course project, a single notebook. It reported
-a KNN classifier with an error of 2.47 places. When I went back to it, the
-number did not hold up, for reasons that had little to do with KNN:
-
-| First version | Problem | Now |
-|---|---|---|
-| Eight models compared on one season, and the winner's score on that same season reported | The reported score is the best of eight tries on 15 data points, so it flatters the model | Walk-forward backtest over four seasons, plus 2025-26 kept aside as a final check |
-| No baseline | No way to tell if the model had learned anything | "Same as last season" baseline, with a confidence interval on the gain |
-| Position treated as 18 separate classes | Throws away the order (2nd is closer to 1st than 15th is) and leaves about five examples per class | Regression on points per game, then rank |
-| Scored on the 15 clubs that stayed up; the forecast table included the three relegated clubs and none of the promoted ones | Not a forecast of the real league | Scored on all 18 clubs in the season being predicted |
-| Season totals as features | Seasons have 30 or 34 games, so totals are not comparable; the seven features held only four independent facts | Per-game rates |
-
-Scored the new way, the first version's model comes out at 2.96 in the backtest
-and 3.22 on 2025-26. That is no better than the baseline. It is kept in the
-comparison as `v1` so the two can be read side by side.
+The second version predicted a club's points per game for the season, a
+regression on about 100 club-seasons. It worked, but 100 rows is very little,
+and its best feature was an Elo rating that was hard to justify on that data.
+This version predicts matches instead. That is about 30 times more examples,
+a classification problem with a clear baseline, and it can be checked week by
+week. Both earlier versions are in the commit history.
 
 ## Limitations
 
-- **Small data.** Six seasons with a previous season to learn from, 100 rows.
-  Every number above carries wide uncertainty, and the confidence intervals
-  treat clubs in the same season as independent when they are not.
-- **Results only.** No squad values, transfers, managers or ownership. The
-  league changed sharply in 2023 when four clubs came under PIF ownership and
-  the league grew to 18 teams; nothing in the features can see that coming.
-- **Promoted clubs** get a generic prior. Al-Qadsiah (4th in 2024-25) and Neom
-  (8th in 2025-26) were both forecast near the bottom.
-- **The tree models run at scikit-learn defaults.** That is what lets them
-  memorise. Limited to shallow trees they stop overfitting and land close to
-  the linear model (2.69 for the forest, 2.93 for boosting in the backtest),
-  so the lesson is about model capacity on 100 rows, not about trees
-  ([tree_capacity_check.csv](reports/tree_capacity_check.csv)). I ran this
-  after choosing the model, so it is a check and not part of the comparison.
-- **Tie-breaks** use goal difference, not the league's head-to-head rule.
+- **Only results.** No squad values, injuries, transfers, line-ups or betting
+  odds. Bookmakers' odds would be the real benchmark; I have not compared
+  against them.
+- **No draws.** See above.
+- **Promoted clubs** get a generic guess. Clubs that came up with large
+  budgets (Al-Ahli in 2023-24, Al-Qadsiah in 2024-25, Neom in 2025-26) were
+  forecast far too low.
+- **The league changed.** It grew from 14 to 16 to 18 clubs and changed
+  sharply after the 2023 ownership changes. The model weights all seasons the
+  same.
+- **One awarded match** (Al-Orobah 0&ndash;3 Al-Nassr, 2024-25) is kept as
+  the official result.
 
 ## Run it
 
@@ -145,25 +164,20 @@ cd saudi-pro-league-forecast
 python -m venv .venv && source .venv/bin/activate
 pip install -e ".[dev]"
 
-python -m spl_predictor   # backtest, forecast, holdout score; rewrites reports/
-pytest                    # 12 tests, including a data-leakage test
+python -m spl_predictor   # backtest, 2025-26 check, next matchweek; rewrites reports/
+pytest                    # 11 tests, including a data-leakage test
 ```
-
-Needs Python 3.10 or newer. A full run takes a few seconds and reproduces every
-number and figure in this README.
 
 ## Repository layout
 
 ```
-data/
-  matches/            one CSV of match results per season
-  holdout/            2025-26 club list and final table
+data/matches/         one CSV of FBref fixtures per season
 src/spl_predictor/
   data.py             load matches, build league tables
-  features.py         one row per club-season, pre-season information only
-  models.py           the five candidates
+  features.py         the two pre-match features
+  models.py           the four candidates
   evaluate.py         walk-forward backtest, metrics, bootstrap
-  forecast.py         forecast, simulated ranges, holdout scoring
+  forecast.py         one matchweek, weekly rankings, a season table
   plots.py            figures
   pipeline.py         runs all of the above
 tests/                unit tests
@@ -174,8 +188,5 @@ docs/architecture.md  design notes
 
 ## Data
 
-Match results were collected from [FBref](https://fbref.com/) with Firecrawl.
-The 2025-26 final table is from
-[Wikipedia](https://en.wikipedia.org/wiki/2025%E2%80%9326_Saudi_Pro_League),
-checked against [RSSSF](https://rsssf.org/tabless/sau2026.html). Details are
-in [data/README.md](data/README.md).
+All matches are from [FBref](https://fbref.com/en/comps/70/history/Saudi-Pro-League-Seasons),
+collected with Firecrawl. Details are in [data/README.md](data/README.md).

@@ -1,3 +1,0 @@
-model,test_mae,train_mae,gap
-Random forest (depth 2),2.691,2.646,0.045
-Gradient boosting (stumps),2.926,2.509,0.418
