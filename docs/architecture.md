@@ -3,113 +3,70 @@
 ## Data flow
 
 ```mermaid
-flowchart TB
-    subgraph inputs [Inputs]
-        M[("data/matches<br/>one CSV per season, FBref")]
-    end
-
-    subgraph prep [Preparation]
-        L["data.load_matches<br/>one row per fixture, result H/D/A"]
-        T["data.league_tables<br/>season tables, for last-season strength"]
-        F["features.add_features<br/>last_diff, form_diff per match"]
-    end
-
-    subgraph eval [Evaluation]
-        W["evaluate.walk_forward<br/>train on earlier seasons, test the next"]
-        S["evaluate.summarise<br/>accuracy, log loss, train-test gap"]
-    end
-
-    subgraph use [Use]
-        K["forecast.predict_week<br/>one matchweek, three probabilities each"]
-        R["forecast.most_likely_winners<br/>clubs ranked by win chance"]
-        Q["forecast.season_table<br/>expected points over a season"]
-    end
-
-    M --> L --> T --> F
-    L --> F
-    F --> W --> S
-    S -->|lowest log loss| K --> R
-    S --> Q
+flowchart LR
+    M[("data/matches<br/>FBref, one CSV per season")] --> L["data.load_matches<br/>one row per fixture, result H/D/A"]
+    L --> G["features.add_gap<br/>gap per match, earlier results only"]
+    G --> W["evaluate.walk_forward<br/>train on earlier seasons, test the next"]
+    W --> S["evaluate.summarise<br/>accuracy, log loss, train-test gap"]
+    S -->|lowest log loss| P["predict.predict_week<br/>three probabilities per match"]
+    P --> R["predict.most_likely_winners<br/>clubs ranked by win chance"]
     S --> O["reports/"]
-    K --> O
+    P --> O
 ```
 
-`pipeline.run()` calls these in order. Each box is one function that takes
-data frames and returns a data frame, so every step can be run on its own,
-which is what the notebook does.
+`pipeline.run()` calls these in order. Each step is a function from data
+frames to a data frame, so the notebook can run them one at a time.
 
-## The modelling table
+## The feature
 
-`add_features` returns one row per match.
+For every match, walk through the history in date order:
 
-| Column | Known before kick-off? | Meaning |
-|---|:---:|---|
-| `home_last`, `away_last` | yes | Goal difference per game last season |
-| `home_form`, `away_form` | yes | Goal difference per game over the last 10 league matches |
-| `last_diff`, `form_diff` | yes | Home minus away, for each of the two. These are the model's inputs |
-| `result` | no (target) | H, D or A |
+1. Each club keeps a list of its goal differences, one per league match.
+2. Before a match, its form is the average of the last 50 entries. With
+   fewer than 3, the club is treated as new to the league: &minus;0.5.
+3. `gap` = home form &minus; away form.
+4. Only then is the match's own result added to both lists.
 
-The first season (2014-15) has no "last season", so its matches only feed
-form. A club with fewer than 3 recent top-flight matches, usually a promoted
-side, uses its last-season number for form too.
+Step 4 coming after step 2 is the leak guard. The first season (2014-15)
+only builds up history, so its matches are not used as rows.
 
-## Walk-forward backtest
+Why goal difference and not points: it is less affected by a few lucky or
+unlucky results. Why 50 matches: it had the lowest backtest log loss of 10,
+20, 34 and 50 (`reports/window_check.csv`). The window crosses season
+boundaries, so early in a season a club's form still reflects last season.
 
-A model is only tested on a season that comes after everything it was trained
-on, the same way it would be used for real.
+## Evaluation
 
-| Test season | Trained on | Test matches |
-|---|---|:---:|
-| 2016-17 | 2015-16 | 182 |
-| 2017-18 | 2015-16 to 2016-17 | 182 |
-| ... | ... | ... |
-| 2024-25 | 2015-16 to 2023-24 | 306 |
-| 2025-26 (holdout) | 2015-16 to 2024-25 | 306 |
+| Set | Seasons | Matches | Used for |
+|---|---|:---:|---|
+| Backtest | 2016-17 to 2024-25 | 2,176 | Choosing the model and the window |
+| Validation | 2025-26 | 306 | Looked at while building; reported, not trusted |
+| Test | 2026-27 so far | 94 | Never looked at until the model was fixed |
 
-Nine backtest seasons, 2,176 matches, choose the model. 2025-26 is scored
-once, after the choice. The 2026-27 season is in progress: the next unplayed
-matchweek is predicted from everything played before it.
+Each season is predicted by a model trained on every earlier season. A
+random split would train on later seasons to predict earlier ones.
 
-A random split of matches would be wrong here: it would train on 2024-25 to
-predict 2019-20, and form features would be computed from matches that come
-after the ones being predicted.
+The model is chosen by **log loss**, because the probabilities are what the
+weekly ranking uses. **Accuracy** is reported too because it is easier to
+explain. The baseline, scikit-learn's `DummyClassifier(strategy="prior")`,
+always picks the most common result (a home win) and gives every match the
+training seasons' result frequencies.
 
-## Design decisions
+## Why logistic regression
 
-**Predict matches, not tables.** Ten seasons of tables give about 100
-club-seasons to learn from; ten seasons of matches give about 2,800. A match
-also has a natural baseline (the home side wins 44% of the time) and can be
-checked every week.
-
-**Two features, in goals per game.** Goal difference is a steadier measure of
-strength than points, which depend on a few lucky or unlucky results. Per
-game, because seasons have had 26, 30 and 34 matches per club. Last season
-gives a stable view; the last 10 matches react to changes, including during
-the current season. Both are differences (home minus away), so the model sees
-how far apart the two teams are.
-
-**Logistic regression.** It turns a weighted sum of the inputs into
-probabilities for the three results. With two inputs it has 9 numbers to
-learn (a weight per input and a constant, for each of the three results) and
-cannot memorise 2,000 matches. The tree ensembles are there to show what
-happens when a model has more freedom than the signal supports.
-
-**Choose by log loss, report accuracy too.** Log loss judges the
-probabilities, which is what the weekly rankings and the season table use.
-Accuracy is easier to explain. Both are reported.
-
-**Season table as a by-product.** Expected points per match, 3 &times; P(win)
-+ P(draw), summed over a season's fixtures with the season's own results
-hidden. It is reported, with its weaker seasons, but it is not what the model
-was chosen for.
+It turns a weighted sum of the input into probabilities for each of the
+three results (a softmax over three linear scores). With one input it learns
+six numbers: a weight and a constant for each result. It cannot memorise
+2,000 matches, and its probabilities are well behaved. The two tree
+ensembles are in the comparison to show what happens when a model has far
+more freedom than the signal supports.
 
 ## Guards against leakage
 
-- Features for a match use only results from earlier dates.
-  `tests/test_features.py` swaps every result from 1 January 2024 onwards and
-  checks that no earlier match's features change.
-- `walk_forward` trains only on earlier seasons; `predict_week` trains only on
-  matches before the week's first kick-off.
-- `season_table` hides the season's results before building its features, so
-  form cannot update during a season it is forecasting.
-- The model is chosen before 2025-26 is scored.
+- `add_gap` reads a club's history before adding the current match.
+  `tests/test_features.py` flips every result from 1 January 2024 onwards and
+  checks that no earlier gap changes.
+- `walk_forward` trains only on earlier seasons. `predict_week` trains only
+  on matches before the week's first kick-off.
+- The model and the window were chosen on the backtest before the 2026-27
+  matches were scored.

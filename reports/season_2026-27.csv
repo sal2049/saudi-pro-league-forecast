@@ -1,0 +1,5 @@
+model,matches,accuracy,log_loss,draws_predicted,train_log_loss,gap,acc_2026-27
+Always home win,94.000,0.394,1.090,0.000,1.068,0.023,0.394
+Logistic regression,94.000,0.543,0.920,0.000,0.974,-0.054,0.543
+Random forest,94.000,0.447,2.556,0.138,0.684,1.873,0.447
+Gradient boosting,94.000,0.489,0.961,0.053,0.897,0.064,0.489

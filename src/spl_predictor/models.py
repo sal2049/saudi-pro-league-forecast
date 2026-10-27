@@ -1,6 +1,6 @@
 """The four candidates: a no-skill baseline, then simple to flexible.
 
-Every candidate takes the two features of a match and returns three
+Every candidate takes the gap feature of a match and returns three
 probabilities: away win, draw, home win.
 """
 

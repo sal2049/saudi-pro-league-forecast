@@ -1,7 +1,7 @@
 import pytest
 
 from spl_predictor.data import load_matches
-from spl_predictor.features import add_features
+from spl_predictor.features import add_gap
 
 
 @pytest.fixture(scope="session")
@@ -11,4 +11,4 @@ def matches():
 
 @pytest.fixture(scope="session")
 def data(matches):
-    return add_features(matches)
+    return add_gap(matches)

@@ -1,10 +1,10 @@
-date,home,away,result,p_A,p_D,p_H,pick
-2026-10-29,Al-Khaleej,Al-Hazem,,0.293,0.257,0.450,home win
-2026-10-29,Al-Nassr,Al-Kholood,,0.044,0.152,0.803,home win
-2026-10-29,Al-Riyadh,Al-Qadsiah,,0.726,0.172,0.102,away win
-2026-10-30,Abha,Al-Ittihad,,0.647,0.201,0.153,away win
-2026-10-30,Al-Shabab,Al-Ahli,,0.629,0.209,0.162,away win
-2026-10-30,Diriyah Club,Neom,,0.475,0.247,0.277,away win
-2026-10-31,Al-Fayha,Al-Faisaly,,0.204,0.246,0.550,home win
-2026-10-31,Al-Hilal,Al-Fateh,,0.036,0.143,0.821,home win
-2026-10-31,Al-Taawoun,Al-Ettifaq,,0.379,0.253,0.368,away win
+date,home,away,gap,result,p_A,p_D,p_H,pick
+2026-10-29,Al-Khaleej,Al-Hazem,0.140,,0.278,0.259,0.463,home win
+2026-10-29,Al-Nassr,Al-Kholood,2.400,,0.037,0.146,0.817,home win
+2026-10-29,Al-Riyadh,Al-Qadsiah,-2.200,,0.757,0.158,0.086,away win
+2026-10-30,Abha,Al-Ittihad,-1.900,,0.708,0.179,0.113,away win
+2026-10-30,Al-Shabab,Al-Ahli,-1.460,,0.625,0.209,0.166,away win
+2026-10-30,Diriyah Club,Neom,-0.226,,0.353,0.260,0.386,home win
+2026-10-31,Al-Fayha,Al-Faisaly,0.000,,0.306,0.261,0.433,home win
+2026-10-31,Al-Hilal,Al-Fateh,2.260,,0.043,0.154,0.804,home win
+2026-10-31,Al-Taawoun,Al-Ettifaq,-0.080,,0.322,0.261,0.417,home win
