@@ -37,8 +37,8 @@ def test_random_rank_mae():
 
 
 def test_forecast_is_a_valid_table(dataset, backtest):
-    elo = next(m for m in candidates() if m.name == "Elo")
-    forecast = forecast_season(dataset, elo, backtest, n_simulations=2_000)
+    linear = next(m for m in candidates() if m.name == "Linear regression")
+    forecast = forecast_season(dataset, linear, backtest, n_simulations=2_000)
 
     assert forecast["pred_position"].tolist() == list(range(1, 19))
     assert forecast["p_title"].sum() == pytest.approx(1.0)

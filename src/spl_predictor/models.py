@@ -14,14 +14,14 @@ import numpy as np
 import pandas as pd
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.ensemble import GradientBoostingRegressor, RandomForestRegressor
-from sklearn.linear_model import LinearRegression, RidgeCV
-from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
+from sklearn.linear_model import LinearRegression
+from sklearn.neighbors import KNeighborsClassifier
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import StandardScaler
 
 SEED = 42
 
-CORE_FEATURES = ["prev_ppg", "prev_gd_pg", "elo", "promoted"]
+CORE_FEATURES = ["prev_ppg", "prev_gd_pg", "promoted"]
 
 # The seven season totals the original notebook used. Only four of them are
 # independent (points = 3*wins + draws, goal_diff = goals_for - goals_against,
@@ -83,18 +83,12 @@ def candidates() -> list[Candidate]:
     """Fresh, unfitted copies of every model in the comparison."""
     return [
         Candidate("Last season", ["prev_ppg"], LastSeason()),
-        Candidate("Elo", ["elo"], LinearRegression()),
         Candidate(
-            "Ridge",
+            "Linear regression",
             CORE_FEATURES,
-            # The penalty strength is chosen by leave-one-out CV on the
-            # training seasons only, so it never sees the season being tested.
-            make_pipeline(StandardScaler(), RidgeCV(alphas=np.logspace(-2, 3, 26))),
-        ),
-        Candidate(
-            "KNN regressor",
-            CORE_FEATURES,
-            make_pipeline(StandardScaler(), KNeighborsRegressor(n_neighbors=7)),
+            # Scaling changes nothing for plain least squares; it is here so
+            # the learned weights can be compared with each other.
+            make_pipeline(StandardScaler(), LinearRegression()),
         ),
         Candidate(
             "Random forest",

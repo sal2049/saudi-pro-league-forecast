@@ -69,7 +69,7 @@ def model_comparison(summary: pd.DataFrame, holdout_mae: pd.Series) -> plt.Figur
     ax.set_yticks(list(y), order)
     ax.set_xlim(0, 4)
     ax.set_xlabel("Average position error (places, lower is better)")
-    ax.set_title("Which model looks best depends on which season you test on")
+    ax.set_title("Only linear regression reliably beats copying last season")
     ax.legend(loc="upper left", bbox_to_anchor=(0, -0.2), ncols=2, handletextpad=0.3)
     return fig
 

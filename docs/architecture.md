@@ -12,7 +12,6 @@ flowchart TB
 
     subgraph prep [Preparation]
         T["data.league_tables<br/>points, goals, position per club"]
-        E["elo.preseason_ratings<br/>rating on each opening day"]
         F["features.build_dataset<br/>features and targets per club-season"]
     end
 
@@ -27,7 +26,6 @@ flowchart TB
     end
 
     M --> T --> F
-    M --> E --> F
     C --> F
     F --> W --> S --> P
     F --> P --> H
@@ -48,7 +46,6 @@ on its own, which is what the notebook does.
 | Column | Known before the season? | Meaning |
 |---|:---:|---|
 | `prev_ppg`, `prev_gd_pg` | yes | Points and goal difference per game last season |
-| `elo` | yes | Elo rating on opening day |
 | `promoted` | yes | 1 if the club was not in last season's table |
 | `prev_points`, `prev_wins`, ... | yes | Raw totals, used only by the `v1` model |
 | `ppg` | no (target) | Points per game this season |
@@ -85,20 +82,19 @@ other club does, and its scale changes when the league grows from 16 to 18
 clubs. Points per game is continuous and means the same thing in every
 season. Ranking the predictions gives the table.
 
-**Elo as a feature.** A season's table compresses 30 or more matches per club
-into one row. Elo uses each match as it happens and carries a club's rating
-from one season into the next, so it holds more of the history than last
-season's table alone. Its four settings are conventional values and were not
-tuned on this data.
+**Three features, all from last season's table.** Points per game, goal
+difference per game and a promoted flag. They are easy to explain and known
+before a ball is kicked. Points and goal difference are highly correlated
+(0.97), but goal difference is less affected by luck in close matches, and it
+is where the model's gain over the baseline comes from: on points alone the
+linear model ranks clubs exactly as the baseline does.
 
 **Promoted clubs.** A promoted club has no previous top-flight season. Its
 `prev_*` features are filled with the average of the previous season's bottom
-three, and the `promoted` flag lets a model correct for that. A club that has
-been in the league before keeps its old Elo rating, pulled toward the mean for
-each summer it was away; a club never seen before starts at 1400.
+three, and the `promoted` flag lets a model correct for that.
 
-**Small models first.** With 100 rows, the comparison is ordered from no
-parameters (baseline) to two (Elo) to five (Ridge) before anything flexible.
+**Small models first.** With 100 rows, the comparison runs from no parameters
+(baseline) to four (linear regression) before anything flexible.
 The tree ensembles are there to show what happens when a model has more
 capacity than the data can support.
 
@@ -114,6 +110,7 @@ ranges and probabilities are read off those simulations.
   checks that the season's features do not change.
 - `walk_forward` trains only on seasons before the test season.
   `tests/test_evaluate.py` asserts it.
-- Ridge chooses its penalty by cross-validation inside the training seasons.
+- Feature scaling sits inside each model pipeline, so it is fitted on the
+  training seasons only.
 - The model is chosen in `pipeline.run()` before `load_final_table` is called.
   The forecast code path never reads the final table.

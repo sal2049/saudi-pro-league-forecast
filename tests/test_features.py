@@ -2,7 +2,7 @@ import pandas as pd
 
 from spl_predictor.features import PREV_COLUMNS, build_dataset
 
-FEATURES = ["promoted", "elo", *PREV_COLUMNS]
+FEATURES = ["promoted", *PREV_COLUMNS]
 
 
 def test_features_cannot_see_the_season_they_predict(matches):

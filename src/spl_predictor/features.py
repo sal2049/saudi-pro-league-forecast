@@ -10,7 +10,6 @@ from __future__ import annotations
 import pandas as pd
 
 from .data import TABLE_COLUMNS, league_tables, next_season
-from .elo import DEFAULT_ELO, EloConfig, preseason_ratings
 
 # Last season's table line, carried forward as "prev_<column>".
 PREV_COLUMNS = [f"prev_{c}" for c in [*TABLE_COLUMNS, "ppg", "gd_pg"]]
@@ -21,11 +20,10 @@ TARGETS = ["ppg", "position"]
 def build_dataset(
     matches: pd.DataFrame,
     upcoming_teams: list[str] | None = None,
-    elo_config: EloConfig = DEFAULT_ELO,
 ) -> pd.DataFrame:
     """Join each club-season to its pre-season features.
 
-    Columns: ``season, team, n_teams, promoted, elo, prev_*`` and the targets
+    Columns: ``season, team, n_teams, promoted, prev_*`` and the targets
     ``ppg`` and ``position``.
 
     The first season in the data has no "previous season" and is dropped. If
@@ -36,10 +34,8 @@ def build_dataset(
     seasons = sorted(tables["season"].unique())
 
     entries = tables[["season", "team", "ppg", "position"]].copy()
-    upcoming = {}
     if upcoming_teams:
         upcoming_season = next_season(seasons[-1])
-        upcoming = {upcoming_season: list(upcoming_teams)}
         entries = pd.concat(
             [entries, pd.DataFrame({"season": upcoming_season, "team": upcoming_teams})],
             ignore_index=True,
@@ -72,8 +68,5 @@ def build_dataset(
     fill = dataset[["season"]].join(bottom_three, on="season")[PREV_COLUMNS]
     dataset[PREV_COLUMNS] = dataset[PREV_COLUMNS].fillna(fill)
 
-    elo = preseason_ratings(matches, upcoming=upcoming, config=elo_config)
-    dataset = dataset.merge(elo, on=["season", "team"], how="left", validate="one_to_one")
-
-    ordered = ["season", "team", "n_teams", "promoted", "elo", *PREV_COLUMNS, *TARGETS]
+    ordered = ["season", "team", "n_teams", "promoted", *PREV_COLUMNS, *TARGETS]
     return dataset[ordered].sort_values(["season", "team"]).reset_index(drop=True)
