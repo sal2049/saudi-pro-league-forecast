@@ -1,42 +1,31 @@
+import numpy as np
 import pandas as pd
 
-from spl_predictor.features import PREV_COLUMNS, build_dataset
+from spl_predictor.data import league_tables
+from spl_predictor.features import FEATURES, add_features
 
-FEATURES = ["promoted", *PREV_COLUMNS]
 
-
-def test_features_cannot_see_the_season_they_predict(matches):
-    """The leak test: rewrite a season's results and its features must not move."""
-    season = "2023-24"
+def test_features_cannot_see_the_match_or_later(matches):
+    """The leak test: rewrite every result from a date on; earlier inputs must not move."""
+    cut = pd.Timestamp("2024-01-01")
     tampered = matches.copy()
-    later = tampered["season"] >= season
-    tampered.loc[later, ["home_goals", "away_goals"]] = tampered.loc[
-        later, ["away_goals", "home_goals"]
-    ].to_numpy()
+    later = tampered["date"] >= cut
+    tampered.loc[later, ["home_goals", "away_goals"]] = tampered.loc[later, ["away_goals", "home_goals"]].to_numpy()
+    tampered.loc[later, "result"] = tampered.loc[later, "result"].map({"H": "A", "A": "H", "D": "D"})
 
-    original = build_dataset(matches)
-    changed = build_dataset(tampered)
-
-    def pick(df):
-        return df[df["season"] == season].set_index("team")
-
-    pd.testing.assert_frame_equal(pick(original)[FEATURES], pick(changed)[FEATURES])
-    # Sanity check that the tampering did something: the targets must differ.
-    assert not pick(original)["ppg"].equals(pick(changed)["ppg"])
+    before, after = add_features(matches), add_features(tampered)
+    first_day = before["date"] == before.loc[before["date"] >= cut, "date"].min()
+    keep = (before["date"] < cut) | first_day   # the first matches on/after the cut use only earlier results
+    pd.testing.assert_frame_equal(before.loc[keep, FEATURES], after.loc[keep, FEATURES])
+    assert not before.loc[later, "result"].equals(after.loc[later, "result"])
 
 
-def test_first_season_is_dropped_and_nothing_is_missing(dataset):
-    assert "2018-19" not in set(dataset["season"])
-    assert not dataset[FEATURES].isna().any().any()
+def test_promoted_club_gets_bottom_three_average(matches, data):
+    last = league_tables(matches).query("season == '2024-25'").sort_values("position")
+    neom = data[(data["season"] == "2025-26") & (data["home"] == "Neom")]
+    assert np.isclose(neom["home_last"].iloc[0], last["gd_pg"].tail(3).mean())
 
 
-def test_promoted_clubs_are_flagged(dataset):
-    promoted = dataset[dataset["promoted"] == 1].groupby("season")["team"].apply(set)
-    assert promoted["2024-25"] == {"Al-Qadsiah", "Al-Orobah", "Al-Kholood"}
-    assert promoted["2025-26"] == {"Neom", "Al-Najma", "Al-Hazem"}
-
-
-def test_upcoming_season_has_features_but_no_targets(dataset):
-    upcoming = dataset[dataset["season"] == "2025-26"]
-    assert len(upcoming) == 18
-    assert upcoming[["ppg", "position"]].isna().all().all()
+def test_first_season_dropped_and_no_gaps(data):
+    assert "2014-15" not in set(data["season"])
+    assert not data[FEATURES].isna().any().any()

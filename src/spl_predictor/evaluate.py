@@ -4,122 +4,80 @@ from __future__ import annotations
 
 import numpy as np
 import pandas as pd
+from sklearn.base import clone
+from sklearn.metrics import accuracy_score, log_loss
 
-from .models import SEED, Candidate
+from .data import RESULTS
+from .features import FEATURES
+from .models import SEED
 
-# With fewer training seasons than this a model has under 32 rows to learn from.
-MIN_TRAIN_SEASONS = 2
 
+def walk_forward(data: pd.DataFrame, models: dict, test_seasons: list[str]) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Test every model the way it would really have been used.
 
-def to_positions(scores: pd.Series, groups: pd.Series) -> pd.Series:
-    """Rank clubs within each season, strongest score first.
-
-    Tied clubs share the average of the positions they span, so a model gets
-    no lucky (or unlucky) credit from an arbitrary tie-break.
+    For each test season, each model is trained on all played matches from
+    earlier seasons and predicts every match of the test season. Returns the
+    test predictions (one row per model and match) and, per model and season,
+    the log loss on the training matches, which is how overfitting is measured.
     """
-    return scores.groupby(groups).rank(ascending=False, method="average")
+    played = data.dropna(subset=["result"])
+    predictions, train_scores = [], []
+    for season in test_seasons:
+        train = played[played["season"] < season]
+        test = played[played["season"] == season]
+        for name, model in models.items():
+            fitted = clone(model).fit(train[FEATURES], train["result"])
+            probs = pd.DataFrame(fitted.predict_proba(test[FEATURES]), columns=fitted.classes_,
+                                 index=test.index)[RESULTS]
+            predictions.append(test[["season", "week", "date", "home", "away", "result"]]
+                               .assign(model=name, pick=probs.idxmax(axis=1))
+                               .join(probs.add_prefix("p_")))
+            train_scores.append({"model": name, "season": season,
+                                 "train_log_loss": log_loss(train["result"], fitted.predict_proba(train[FEATURES]),
+                                                            labels=fitted.classes_)})
+    return pd.concat(predictions, ignore_index=True), pd.DataFrame(train_scores)
 
 
-def walk_forward(
-    dataset: pd.DataFrame,
-    models: list[Candidate],
-    min_train_seasons: int = MIN_TRAIN_SEASONS,
-) -> pd.DataFrame:
-    """Backtest every model the way it would really have been used.
-
-    For each test season, a model is trained on all earlier seasons and asked
-    to predict that season's table. Nothing from the test season or later is
-    ever visible to it. Predictions on the training seasons are kept as well,
-    because the gap between the two is how we measure overfitting.
-
-    Returns one row per (model, test season, split, club).
-    """
-    labelled = dataset.dropna(subset=["ppg"])
-    seasons = sorted(labelled["season"].unique())
-    results = []
-
-    for test_season in seasons[min_train_seasons:]:
-        train = labelled[labelled["season"] < test_season]
-        test = labelled[labelled["season"] == test_season]
-
-        for model in models:
-            fitted = model.fit(train)
-            for split, rows in (("train", train), ("test", test)):
-                score = pd.Series(fitted.predict(rows[model.features]), index=rows.index)
-                results.append(
-                    pd.DataFrame(
-                        {
-                            "model": model.name,
-                            "test_season": test_season,
-                            "split": split,
-                            "season": rows["season"],
-                            "team": rows["team"],
-                            "n_teams": rows["n_teams"],
-                            "promoted": rows["promoted"],
-                            "position": rows["position"],
-                            "pred_position": to_positions(score, rows["season"]),
-                            "ppg": rows["ppg"],
-                            "pred_ppg": score if model.predicts_ppg else np.nan,
-                        }
-                    )
-                )
-
-    out = pd.concat(results, ignore_index=True)
-    out["abs_error"] = (out["pred_position"] - out["position"]).abs()
-    return out
+def score(predictions: pd.DataFrame) -> pd.Series:
+    """Accuracy and log loss for one set of predictions."""
+    probs = predictions[[f"p_{r}" for r in RESULTS]].to_numpy()
+    return pd.Series({
+        "matches": len(predictions),
+        "accuracy": accuracy_score(predictions["result"], predictions["pick"]),
+        "log_loss": log_loss(predictions["result"], probs, labels=RESULTS),
+        "draws_predicted": (predictions["pick"] == "D").mean(),
+    })
 
 
-def summarise(predictions: pd.DataFrame) -> pd.DataFrame:
-    """One row per model: test accuracy, spread across seasons, and train-test gap."""
+def summarise(predictions: pd.DataFrame, train_scores: pd.DataFrame) -> pd.DataFrame:
+    """One row per model: test accuracy and log loss, and the train-test gap."""
     order = list(dict.fromkeys(predictions["model"]))
-    test = predictions[predictions["split"] == "test"]
-    train = predictions[predictions["split"] == "train"]
-
-    per_season = test.groupby(["model", "test_season"])["abs_error"].mean().unstack()
-    rho = test.groupby(["model", "test_season"])[["position", "pred_position"]].apply(
-        lambda g: g["position"].corr(g["pred_position"], method="spearman")
-    )
-
-    summary = pd.DataFrame(
-        {
-            "test_mae": test.groupby("model")["abs_error"].mean(),
-            "season_sd": per_season.std(axis=1),
-            "train_mae": train.groupby("model")["abs_error"].mean(),
-            "within_3": test.groupby("model")["abs_error"].apply(lambda e: (e <= 3).mean()),
-            "exact": test.groupby("model")["abs_error"].apply(lambda e: (e == 0).mean()),
-            "spearman": rho.groupby("model").mean(),
-            "ppg_mae": test.assign(e=(test["pred_ppg"] - test["ppg"]).abs())
-            .groupby("model")["e"]
-            .mean(),
-        }
-    )
-    summary["gap"] = summary["test_mae"] - summary["train_mae"]
-    return summary.join(per_season).loc[order]
+    summary = predictions.groupby("model").apply(score, include_groups=False).loc[order]
+    summary["train_log_loss"] = train_scores.groupby("model")["train_log_loss"].mean()
+    summary["gap"] = summary["log_loss"] - summary["train_log_loss"]
+    per_season = predictions.groupby(["model", "season"]).apply(
+        lambda g: accuracy_score(g["result"], g["pick"]), include_groups=False).unstack()
+    return summary.join(per_season.add_prefix("acc_"))
 
 
-def random_rank_mae(n_teams: int) -> float:
-    """Expected position error of a uniformly random ordering of ``n_teams``."""
-    return (n_teams**2 - 1) / (3 * n_teams)
+def weekly_accuracy(predictions: pd.DataFrame) -> pd.DataFrame:
+    """How many results the picks got right, matchweek by matchweek."""
+    correct = predictions["pick"] == predictions["result"]
+    return (predictions.assign(correct=correct)
+            .groupby(["model", "season", "week"])["correct"].agg(["sum", "size"])
+            .rename(columns={"sum": "right", "size": "matches"}).reset_index())
 
 
-def paired_bootstrap(
-    scored: pd.DataFrame,
-    model: str,
-    baseline: str,
-    n_resamples: int = 10_000,
-) -> tuple[float, float, float]:
-    """Is ``model`` really better than ``baseline``, or is the gap just noise?
+def paired_bootstrap(a: pd.Series, b: pd.Series, n_resamples: int = 10_000) -> tuple[float, float, float]:
+    """Mean of (a - b) over matches, with a 95% interval from resampling matches.
 
-    ``scored`` holds out-of-sample errors with columns ``model, season, team,
-    abs_error``. The club-seasons are resampled with replacement and the mean
-    difference in position error (model minus baseline, negative = model is
-    better) is returned with a 95% interval. An interval that straddles zero
-    means the data cannot separate the two.
+    Used for "how many more results does the model get right than the
+    baseline": a and b are 1 for a correct pick, 0 otherwise.
     """
-    errors = scored.pivot(index=["season", "team"], columns="model", values="abs_error")
-    diff = (errors[model] - errors[baseline]).to_numpy()
-
+    diff = (a.to_numpy(dtype=float) - b.to_numpy(dtype=float))
     rng = np.random.default_rng(SEED)
-    draws = rng.choice(diff, size=(n_resamples, diff.size), replace=True).mean(axis=1)
+    # In blocks of 1,000 resamples so memory stays small with thousands of matches.
+    draws = np.concatenate([rng.choice(diff, size=(1_000, diff.size)).mean(axis=1)
+                            for _ in range(n_resamples // 1_000)])
     low, high = np.percentile(draws, [2.5, 97.5])
     return float(diff.mean()), float(low), float(high)

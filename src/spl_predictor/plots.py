@@ -1,4 +1,4 @@
-"""The three figures used in the README."""
+"""The figures used in the README."""
 
 from __future__ import annotations
 
@@ -54,79 +54,69 @@ def save(fig: plt.Figure, path: Path) -> Path:
     return path
 
 
-def model_comparison(summary: pd.DataFrame, holdout_mae: pd.Series) -> plt.Figure:
-    """Backtest error per model next to its error on the untouched 2025-26 season."""
-    order = summary.sort_values("test_mae", ascending=False).index
+def model_comparison(backtest: pd.DataFrame, holdout: pd.DataFrame) -> plt.Figure:
+    """Share of results picked correctly: backtest seasons and the 2025-26 season."""
+    order = backtest.sort_values("accuracy").index
     y = range(len(order))
 
-    fig, ax = plt.subplots(figsize=(7.5, 3.6))
-    ax.hlines(y, summary.loc[order, "test_mae"], holdout_mae[order], color=GRID, lw=2, zorder=1)
-    ax.scatter(summary.loc[order, "test_mae"], y, s=70, color=BLUE, zorder=3,
-               edgecolor=SURFACE, linewidth=1.5, label="Backtest, 2021-22 to 2024-25")
-    ax.scatter(holdout_mae[order], y, s=70, color=ORANGE, marker="D", zorder=3,
-               edgecolor=SURFACE, linewidth=1.5, label="Holdout, 2025-26")
-
+    fig, ax = plt.subplots(figsize=(7.5, 3.2))
+    ax.hlines(y, backtest.loc[order, "accuracy"], holdout.loc[order, "accuracy"], color=GRID, lw=2, zorder=1)
+    ax.scatter(backtest.loc[order, "accuracy"], y, s=70, color=BLUE, zorder=3,
+               edgecolor=SURFACE, linewidth=1.5, label="Backtest, 2016-17 to 2024-25")
+    ax.scatter(holdout.loc[order, "accuracy"], y, s=70, color=ORANGE, marker="D", zorder=3,
+               edgecolor=SURFACE, linewidth=1.5, label="2025-26 season")
     ax.set_yticks(list(y), order)
-    ax.set_xlim(0, 4)
-    ax.set_xlabel("Average position error (places, lower is better)")
-    ax.set_title("Only linear regression reliably beats copying last season")
-    ax.legend(loc="upper left", bbox_to_anchor=(0, -0.2), ncols=2, handletextpad=0.3)
+    ax.set_xlim(0.40, 0.62)
+    ax.set_xticks([0.40, 0.45, 0.50, 0.55, 0.60])
+    ax.xaxis.set_major_formatter(lambda v, _: f"{v:.0%}")
+    ax.set_xlabel("Match results picked correctly (higher is better)")
+    ax.set_title("Only logistic regression clearly beats always picking the home team")
+    ax.legend(loc="upper left", bbox_to_anchor=(0, -0.22), ncols=2, handletextpad=0.3)
     return fig
 
 
 def overfitting_gap(summary: pd.DataFrame) -> plt.Figure:
-    """Error on seasons a model trained on versus seasons it had never seen."""
+    """Log loss on the matches a model trained on against matches it had not seen."""
     order = summary.sort_values("gap").index
     y = range(len(order))
 
-    fig, ax = plt.subplots(figsize=(7.5, 3.6))
-    ax.hlines(y, summary.loc[order, "train_mae"], summary.loc[order, "test_mae"],
-              color=GRID, lw=2, zorder=1)
-    ax.scatter(summary.loc[order, "train_mae"], y, s=70, facecolor=SURFACE, edgecolor=BLUE,
-               linewidth=2, zorder=3, label="Seasons it trained on")
-    ax.scatter(summary.loc[order, "test_mae"], y, s=70, color=BLUE, zorder=3,
+    fig, ax = plt.subplots(figsize=(7.5, 3.2))
+    ax.hlines(y, summary.loc[order, "train_log_loss"], summary.loc[order, "log_loss"], color=GRID, lw=2, zorder=1)
+    ax.scatter(summary.loc[order, "train_log_loss"], y, s=70, facecolor=SURFACE, edgecolor=BLUE,
+               linewidth=2, zorder=3, label="Matches it trained on")
+    ax.scatter(summary.loc[order, "log_loss"], y, s=70, color=BLUE, zorder=3,
                edgecolor=SURFACE, linewidth=1.5, label="Unseen season")
     for row, name in zip(y, order):
-        gap = summary.loc[name, "gap"]
-        ax.annotate(f"{gap:+.1f}", (summary.loc[name, ["train_mae", "test_mae"]].max(), row),
+        ax.annotate(f"{summary.loc[name, 'gap']:+.2f}",
+                    (summary.loc[name, ["train_log_loss", "log_loss"]].max(), row),
                     xytext=(9, 0), textcoords="offset points", va="center", color=MUTED)
-
     ax.set_yticks(list(y), order)
-    ax.set_xlim(0, 4)
-    ax.set_xlabel("Average position error (places)")
-    ax.set_title("The flexible models memorise the training seasons")
-    ax.legend(loc="upper left", bbox_to_anchor=(0, -0.2), ncols=2, handletextpad=0.3)
+    ax.set_xlim(0, 1.7)
+    ax.set_xlabel("Log loss (lower is better)")
+    ax.set_title("The tree models memorise the matches they trained on")
+    ax.legend(loc="upper left", bbox_to_anchor=(0, -0.22), ncols=2, handletextpad=0.3)
     return fig
 
 
-def forecast_vs_actual(forecast: pd.DataFrame, final_table: pd.DataFrame) -> plt.Figure:
-    """Forecast position and range for each club against where it finished."""
-    actual = forecast["team"].map(final_table.set_index("team")["position"])
-    y = forecast["pred_position"]
-    n_teams = len(forecast)
+def season_table(table: pd.DataFrame, season: str) -> plt.Figure:
+    """Pre-season forecast position for each club against where it finished."""
+    table = table.sort_values("predicted_position")
+    y = table["predicted_position"]
+    n = len(table)
 
     fig, ax = plt.subplots(figsize=(7.5, 6.2))
-    ax.hlines(y, forecast["pos_low"], forecast["pos_high"], color=BLUE, alpha=0.18, lw=7,
-              capstyle="round", zorder=1)
-    ax.scatter(forecast["pred_position"], y, s=110, color=BLUE, zorder=3,
-               edgecolor=SURFACE, linewidth=1.5)
-    ax.scatter(actual, y, s=34, color=ORANGE, marker="D", zorder=4,
-               edgecolor=SURFACE, linewidth=1.2)
-
-    labels = [f"{t} (promoted)" if p else t for t, p in zip(forecast["team"], forecast["promoted"])]
-    ax.set_yticks(y, labels)
-    ax.set_ylim(n_teams + 0.7, 0.3)
-    ax.set_xlim(0.3, n_teams + 0.7)
-    ax.set_xticks(range(1, n_teams + 1))
+    ax.hlines(y, table["predicted_position"], table["position"], color=GRID, lw=2, zorder=1)
+    ax.scatter(table["predicted_position"], y, s=90, color=BLUE, zorder=3, edgecolor=SURFACE, linewidth=1.5)
+    ax.scatter(table["position"], y, s=34, color=ORANGE, marker="D", zorder=4, edgecolor=SURFACE, linewidth=1.2)
+    ax.set_yticks(y, table["team"])
+    ax.set_ylim(n + 0.7, 0.3)
+    ax.set_xlim(0.3, n + 0.7)
+    ax.set_xticks(range(1, n + 1))
     ax.set_xlabel("League position")
-    ax.set_title("2025-26: forecast made from data up to May 2025, and what happened")
+    ax.set_title(f"{season}: table from summed match predictions, made before the season")
     ax.legend(
-        handles=[
-            Line2D([], [], marker="o", color=BLUE, lw=0, markersize=9, label="Forecast"),
-            Line2D([], [], color=BLUE, alpha=0.18, lw=7, label="80% range"),
-            Line2D([], [], marker="D", color=ORANGE, lw=0, markersize=6, label="Actual finish"),
-        ],
-        loc="upper left", bbox_to_anchor=(0, -0.09), ncols=3, handletextpad=0.8,
-        columnspacing=2.0,
+        handles=[Line2D([], [], marker="o", color=BLUE, lw=0, markersize=9, label="Forecast"),
+                 Line2D([], [], marker="D", color=ORANGE, lw=0, markersize=6, label="Actual finish")],
+        loc="upper left", bbox_to_anchor=(0, -0.09), ncols=2, handletextpad=0.8, columnspacing=2.0,
     )
     return fig

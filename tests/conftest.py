@@ -1,7 +1,7 @@
 import pytest
 
-from spl_predictor.data import load_matches, load_upcoming_teams
-from spl_predictor.features import build_dataset
+from spl_predictor.data import load_matches
+from spl_predictor.features import add_features
 
 
 @pytest.fixture(scope="session")
@@ -10,5 +10,5 @@ def matches():
 
 
 @pytest.fixture(scope="session")
-def dataset(matches):
-    return build_dataset(matches, load_upcoming_teams("2025-26"))
+def data(matches):
+    return add_features(matches)

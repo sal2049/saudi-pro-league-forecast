@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "spl-predictor"
 version = "2.0.0"
-description = "Forecasting the Saudi Pro League table from seven seasons of match results"
+description = "Predicting Saudi Pro League match results (home win, draw, away win) from past results"
 readme = "README.md"
 requires-python = ">=3.10"
 authors = [{ name = "Salman" }]

@@ -1,72 +1,77 @@
-"""Build the modelling table: one row per club per season.
+"""Turn each match into two numbers that were known before kick-off.
 
-Every feature describes what was known *before* the season kicked off, and
-the targets describe how that season ended. Keeping the two strictly apart is
-the whole job of this module (see ``tests/test_features.py`` for the leak test).
+1. ``last_diff``: home team's goal difference per game last season, minus the
+   away team's. How strong each club was over a whole season.
+2. ``form_diff``: the same, over each team's last 10 league matches. How
+   strong each club has been lately, including this season.
+
+Nothing about a match, or anything played after it, can reach its own
+features; ``tests/test_features.py`` checks that.
 """
 
 from __future__ import annotations
 
+from collections import defaultdict
+from itertools import pairwise
+
+import numpy as np
 import pandas as pd
 
-from .data import TABLE_COLUMNS, league_tables, next_season
+from .data import league_tables
 
-# Last season's table line, carried forward as "prev_<column>".
-PREV_COLUMNS = [f"prev_{c}" for c in [*TABLE_COLUMNS, "ppg", "gd_pg"]]
+FEATURES = ["last_diff", "form_diff"]
+FORM_WINDOW = 10   # league matches
+FORM_MINIMUM = 3   # fewer than this and form falls back to last season
 
-TARGETS = ["ppg", "position"]
 
+def last_season_strength(matches: pd.DataFrame) -> dict[tuple[str, str], float]:
+    """Goal difference per game last season, for every (season, club).
 
-def build_dataset(
-    matches: pd.DataFrame,
-    upcoming_teams: list[str] | None = None,
-) -> pd.DataFrame:
-    """Join each club-season to its pre-season features.
-
-    Columns: ``season, team, n_teams, promoted, prev_*`` and the targets
-    ``ppg`` and ``position``.
-
-    The first season in the data has no "previous season" and is dropped. If
-    ``upcoming_teams`` is given, rows for the season after the last one in
-    ``matches`` are appended with empty targets, ready to be forecast.
+    A promoted club has no top-flight season to look back on. It gets the
+    average of last season's bottom three: "about as good as the clubs it
+    replaced".
     """
     tables = league_tables(matches)
-    seasons = sorted(tables["season"].unique())
+    seasons = sorted(matches["season"].unique())
+    strength = {}
+    for previous, season in pairwise(seasons):
+        last = tables[tables["season"] == previous].set_index("team")
+        promoted_guess = last.sort_values("position")["gd_pg"].tail(3).mean()
+        clubs = pd.unique(matches.loc[matches["season"] == season, ["home", "away"]].values.ravel())
+        for club in clubs:
+            strength[(season, club)] = last["gd_pg"].get(club, promoted_guess)
+    return strength
 
-    entries = tables[["season", "team", "ppg", "position"]].copy()
-    if upcoming_teams:
-        upcoming_season = next_season(seasons[-1])
-        entries = pd.concat(
-            [entries, pd.DataFrame({"season": upcoming_season, "team": upcoming_teams})],
-            ignore_index=True,
-        )
-    entries["n_teams"] = entries.groupby("season")["team"].transform("size")
 
-    # Shift every table forward one season so it lines up with the season it
-    # is allowed to inform.
-    previous = tables.drop(columns="position").copy()
-    previous["season"] = previous["season"].map(next_season)
-    previous = previous.rename(columns={c: f"prev_{c}" for c in previous.columns[2:]})
+def add_features(matches: pd.DataFrame) -> pd.DataFrame:
+    """Add both features to every match after the first season.
 
-    dataset = entries.merge(previous, on=["season", "team"], how="left")
-    dataset = dataset[dataset["season"] != seasons[0]]
+    The first season has no "last season", so its matches are dropped. They
+    still count towards form.
+    """
+    strength = last_season_strength(matches)
+    out = matches.copy()
+    out["home_last"] = [strength.get(k, np.nan) for k in zip(out["season"], out["home"])]
+    out["away_last"] = [strength.get(k, np.nan) for k in zip(out["season"], out["away"])]
 
-    # A club with no line in last season's table was promoted. Stand in for
-    # its missing history with the average of last season's bottom three,
-    # i.e. "assume a promoted side is about as good as the sides it replaced".
-    # The `promoted` flag lets a model learn how far off that assumption is.
-    dataset["promoted"] = dataset["prev_points"].isna().astype(int)
-    bottom_three = (
-        tables.sort_values("position")
-        .groupby("season")
-        .tail(3)
-        .groupby("season")[[c.removeprefix("prev_") for c in PREV_COLUMNS]]
-        .mean()
-        .add_prefix("prev_")
-    )
-    bottom_three.index = bottom_three.index.map(next_season)
-    fill = dataset[["season"]].join(bottom_three, on="season")[PREV_COLUMNS]
-    dataset[PREV_COLUMNS] = dataset[PREV_COLUMNS].fillna(fill)
+    # Walk through the matches in date order, reading each club's recent goal
+    # differences *before* adding this match to them.
+    history: dict[str, list[float]] = defaultdict(list)
+    home_form, away_form = [], []
+    for match in out.itertuples(index=False):
+        for club, column in ((match.home, home_form), (match.away, away_form)):
+            recent = history[club][-FORM_WINDOW:]
+            column.append(np.mean(recent) if len(recent) >= FORM_MINIMUM else np.nan)
+        if match.result is not None:
+            history[match.home].append(match.home_goals - match.away_goals)
+            history[match.away].append(match.away_goals - match.home_goals)
+    out["home_form"] = home_form
+    out["away_form"] = away_form
+    # A club with too few recent top-flight matches (usually a promoted side)
+    # is treated as being in last-season form.
+    out["home_form"] = out["home_form"].fillna(out["home_last"])
+    out["away_form"] = out["away_form"].fillna(out["away_last"])
 
-    ordered = ["season", "team", "n_teams", "promoted", *PREV_COLUMNS, *TARGETS]
-    return dataset[ordered].sort_values(["season", "team"]).reset_index(drop=True)
+    out["last_diff"] = out["home_last"] - out["away_last"]
+    out["form_diff"] = out["home_form"] - out["away_form"]
+    return out.dropna(subset=["last_diff"]).reset_index(drop=True)
