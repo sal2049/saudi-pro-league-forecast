@@ -2,27 +2,40 @@
 
 ## `matches/`
 
-One CSV per season, 2018-19 to 2024-25, one row per league match (1,812 in
-total). Collected from [FBref](https://fbref.com/) with Firecrawl.
+One CSV per season, 2014-15 to 2026-27, scraped with Firecrawl from FBref's
+"Scores and Fixtures" pages, for example
+<https://fbref.com/en/comps/70/2025-2026/schedule/2025-2026-Saudi-Pro-League-Scores-and-Fixtures>.
+The current season's file was scraped on 27 October 2026 and includes
+fixtures that have not been played yet.
 
 | Column | Example | Meaning |
 |---|---|---|
-| `Date` | `Thu Aug 22 2024` | Match date |
-| `Team 1` | `Al-Taawoun` | Home side |
-| `FT` | `1-0` | Full-time score, home goals first |
-| `Team 2` | `Al-Fayha` | Away side |
+| `season` | `2024-25` | Season |
+| `week` | `12` | Matchweek (round) |
+| `date` | `2024-08-22` | Match date |
+| `home` | `Al-Taawoun` | Home side |
+| `score` | `1–0` | Full-time score, home goals first. Blank if not played yet |
+| `away` | `Al-Fayha` | Away side |
+| `notes` | | FBref's note, if any |
 
-Seasons up to 2022-23 have 16 clubs and 240 matches. From 2023-24 the league
-has 18 clubs and 306 matches.
+| Seasons | Clubs | Matches per season |
+|---|:---:|:---:|
+| 2014-15 to 2017-18 | 14 | 182 |
+| 2018-19 to 2022-23 | 16 | 240 |
+| 2023-24 onwards | 18 | 306 |
 
-## `holdout/`
+2,940 played matches in total up to the scrape date.
 
-Files for 2025-26, the season the project forecasts. They are kept apart from
-the match data because they play a different role.
+**Checks.** For the seven seasons 2018-19 to 2024-25, every score and date
+matches the files this project used before (1,812 matches). Every finished
+season is a complete double round-robin, and the computed champions match
+the real ones (tested in `tests/test_data.py`).
 
-- `teams_2025-26.csv` lists the 18 clubs in the league. This is known before
-  the season starts and is the only 2025-26 input the forecast uses.
-- `final_table_2025-26.csv` is the table as it finished in May 2026, taken from
-  [Wikipedia](https://en.wikipedia.org/wiki/2025%E2%80%9326_Saudi_Pro_League)
-  and checked row by row against [RSSSF](https://rsssf.org/tabless/sau2026.html).
-  It is read once, after the forecast is written, to score it.
+**Known quirks.**
+- Al-Orobah v Al-Nassr on 28 February 2025 is recorded as 0&ndash;3, "match
+  awarded to Al-Nassr". It is kept as the official result.
+- In 2026-27, five matches from weeks 8 to 10 were postponed to later dates.
+  The "next matchweek" is the earliest week with no results at all.
+
+To refresh the current season, scrape its fixtures page again and replace
+`2026-27.csv`, keeping the same columns.
